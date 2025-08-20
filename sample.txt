@@ -1,0 +1,162 @@
+transfer panel component 
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+
+export interface TransferItem {
+  id: number | string;
+  label: string;
+  selected?: boolean;
+}
+
+@Component({
+  selector: 'app-transfer-panel',
+  templateUrl: './transfer-panel.component.html',
+  styleUrls: ['./transfer-panel.component.scss']
+})
+export class TransferPanelComponent {
+  @Input() title = '';
+  @Input() items: TransferItem[] = [];
+  @Input() disableCheckFor?: (item: TransferItem) => boolean; // conditionally disable
+
+  @Output() selectChange = new EventEmitter<void>();
+
+  selectAll = false;
+
+  /** Toggle all items */
+  toggleSelectAll(checked: boolean) {
+    this.items.forEach(item => {
+      if (!this.disableCheckFor?.(item)) {
+        item.selected = checked;
+      }
+    });
+    this.selectChange.emit();
+  }
+
+  /** Update selectAll checkbox dynamically */
+  updateSelectAll() {
+    const selectableItems = this.items.filter(i => !this.disableCheckFor?.(i));
+    this.selectAll = selectableItems.length > 0 && selectableItems.every(i => i.selected);
+    this.selectChange.emit();
+  }
+}
+
+
+
+html 
+<div class="panel">
+  <div class="panel-header">
+    <mat-checkbox [(ngModel)]="selectAll" (change)="toggleSelectAll($event.checked!)">
+      Select All
+    </mat-checkbox>
+  </div>
+
+  <mat-selection-list>
+    <mat-list-option *ngFor="let item of items"
+                     [(selected)]="item.selected"
+                     [disabled]="disableCheckFor?.(item)"
+                     (selectionChange)="updateSelectAll()">
+      {{ item.label }}
+    </mat-list-option>
+  </mat-selection-list>
+</div>
+
+
+css
+.panel {
+  width: 240px;
+  height: 320px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 6px 10px;
+  background: #f7f7f7;
+  border-bottom: 1px solid #eee;
+}
+
+mat-selection-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+
+dual transfer
+import { Component, Input } from '@angular/core';
+import { TransferItem } from '../transfer-panel/transfer-panel.component';
+
+@Component({
+  selector: 'app-dual-transfer-box',
+  templateUrl: './dual-transfer-box.component.html',
+  styleUrls: ['./dual-transfer-box.component.scss']
+})
+export class DualTransferBoxComponent {
+  @Input() items: TransferItem[] = [];
+
+  leftItems: TransferItem[] = [];
+  rightItems: TransferItem[] = [];
+
+  ngOnInit() {
+    this.leftItems = [...this.items];
+  }
+
+  moveRight() {
+    const selected = this.leftItems.filter(i => i.selected && !this.isInRight(i));
+    this.rightItems = [...this.rightItems, ...selected.map(i => ({ ...i, selected: false }))];
+    this.leftItems.forEach(i => i.selected = false);
+  }
+
+  moveLeft() {
+    const selected = this.rightItems.filter(i => i.selected);
+    this.rightItems = this.rightItems.filter(i => !i.selected);
+    selected.forEach(item => {
+      const left = this.leftItems.find(i => i.id === item.id);
+      if (left) left.selected = false;
+    });
+  }
+
+  isInRight(item: TransferItem): boolean {
+    return this.rightItems.some(r => r.id === item.id);
+  }
+}
+
+html
+<div class="transfer-box">
+  <!-- LEFT PANEL -->
+  <app-transfer-panel
+    title="Available"
+    [items]="leftItems"
+    [disableCheckFor]="isInRight.bind(this)">
+  </app-transfer-panel>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button mat-icon-button color="primary" (click)="moveRight()">
+      <mat-icon>arrow_forward</mat-icon>
+    </button>
+    <button mat-icon-button color="accent" (click)="moveLeft()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <app-transfer-panel
+    title="Selected"
+    [items]="rightItems">
+  </app-transfer-panel>
+</div>
+
+scss
+.transfer-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
