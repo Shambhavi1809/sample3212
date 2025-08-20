@@ -1,0 +1,123 @@
+scss
+
+.panel {
+  width: 320px;
+  height: 400px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.panel-title {
+  padding: 8px 12px;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+}
+
+.panel-search {
+  padding: 8px 12px;
+}
+
+.search-field {
+  width: 100%;
+}
+
+.panel-header {
+  padding: 6px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+html 
+<div class="panel">
+  <!-- Panel Title -->
+  <div class="panel-title">{{ title }}</div>
+
+  <!-- Search Bar -->
+  <div class="panel-search">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input matInput [(ngModel)]="searchText" placeholder="Type to filter..." />
+      <button *ngIf="searchText" matSuffix mat-icon-button aria-label="Clear" (click)="searchText=''">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+
+  <!-- Select All -->
+  <div class="panel-header">
+    <mat-checkbox [(ngModel)]="selectAll" (change)="toggleSelectAll($event.checked!)">
+      Select All
+    </mat-checkbox>
+  </div>
+
+  <!-- Items List -->
+  <div class="panel-body">
+    <mat-selection-list>
+      <mat-list-option *ngFor="let item of filteredItems"
+                       [(selected)]="item.selected"
+                       [disabled]="disableCheckFor?.(item)"
+                       (selectionChange)="updateSelectAll()">
+        {{ item.label }}
+      </mat-list-option>
+    </mat-selection-list>
+  </div>
+</div>
+
+
+ts: 
+
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+
+export interface TransferItem {
+  id: number | string;
+  label: string;
+  selected?: boolean;
+}
+
+@Component({
+  selector: 'app-transfer-panel',
+  templateUrl: './transfer-panel.component.html',
+  styleUrls: ['./transfer-panel.component.scss']
+})
+export class TransferPanelComponent {
+  @Input() title = '';
+  @Input() items: TransferItem[] = [];
+  @Input() disableCheckFor?: (item: TransferItem) => boolean;
+
+  @Output() selectChange = new EventEmitter<void>();
+
+  selectAll = false;
+  searchText = '';
+
+  /** Filtered items based on search */
+  get filteredItems(): TransferItem[] {
+    const term = this.searchText.toLowerCase();
+    return this.items.filter(i => i.label.toLowerCase().includes(term));
+  }
+
+  toggleSelectAll(checked: boolean) {
+    this.filteredItems.forEach(item => {
+      if (!this.disableCheckFor?.(item)) {
+        item.selected = checked;
+      }
+    });
+    this.selectChange.emit();
+  }
+
+  updateSelectAll() {
+    const selectable = this.filteredItems.filter(i => !this.disableCheckFor?.(i));
+    this.selectAll = selectable.length > 0 && selectable.every(i => i.selected);
+    this.selectChange.emit();
+  }
+}
+
+
