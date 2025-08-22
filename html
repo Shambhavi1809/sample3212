@@ -1,0 +1,30 @@
+<!-- dual-panel.component.html -->
+<div class="panel-container">
+  <!-- Left Panel -->
+  <div class="panel">
+    <h3>Available Options</h3>
+    <div *ngFor="let item of leftPanel">
+      <label>
+        <input type="checkbox" [(ngModel)]="item.selected" />
+        {{ item.label }}
+      </label>
+    </div>
+  </div>
+
+  <!-- Middle Buttons -->
+  <div class="buttons">
+    <button (click)="moveRight()">➡</button>
+    <button (click)="moveLeft()">⬅</button>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="panel">
+    <h3>Selected Options</h3>
+    <div *ngFor="let item of rightPanel">
+      <label>
+        <input type="checkbox" [(ngModel)]="item.selected" />
+        {{ item.label }}
+      </label>
+    </div>
+  </div>
+</div>
