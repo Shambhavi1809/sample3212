@@ -1,0 +1,22 @@
+/* dual-panel.component.scss */
+.panel-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.panel {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  width: 200px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+}
