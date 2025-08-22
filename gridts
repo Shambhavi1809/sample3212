@@ -1,0 +1,40 @@
+// dual-panel.component.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-dual-panel',
+  templateUrl: './dual-panel.component.html',
+  styleUrls: ['./dual-panel.component.scss']
+})
+export class DualPanelComponent {
+  leftPanel = [
+    { id: 1, label: 'Option A', selected: false },
+    { id: 2, label: 'Option B', selected: false },
+    { id: 3, label: 'Option C', selected: false }
+  ];
+
+  rightPanel = [
+    { id: 4, label: 'Option D', selected: false },
+    { id: 5, label: 'Option E', selected: false }
+  ];
+
+  // move from left → right
+  moveRight() {
+    const toMove = this.leftPanel.filter(item => item.selected);
+    toMove.forEach(item => {
+      item.selected = false; // reset selection when moved
+      this.rightPanel.push(item);
+    });
+    this.leftPanel = this.leftPanel.filter(item => !toMove.includes(item));
+  }
+
+  // move from right → left
+  moveLeft() {
+    const toMove = this.rightPanel.filter(item => item.selected);
+    toMove.forEach(item => {
+      item.selected = false;
+      this.leftPanel.push(item);
+    });
+    this.rightPanel = this.rightPanel.filter(item => !toMove.includes(item));
+  }
+}
