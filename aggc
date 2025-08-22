@@ -1,0 +1,210 @@
+ts
+import { Component, Input } from '@angular/core';
+import { ColDef } from 'ag-grid-community';
+
+interface Item {
+  id: number;
+  text: string;
+  selected?: boolean;
+  moved?: boolean;
+}
+
+@Component({
+  selector: 'app-dual-transfer',
+  templateUrl: './dual-transfer.component.html',
+  styleUrls: ['./dual-transfer.component.scss']
+})
+export class DualTransferComponent {
+
+  @Input() items: Item[] = [];
+
+  leftItems: Item[] = [];
+  rightItems: Item[] = [];
+
+  leftRowData: Item[] = [];
+  rightRowData: Item[] = [];
+
+  leftSearch: string = '';
+  rightSearch: string = '';
+
+  columnDefs: ColDef[] = [
+    {
+      headerName: '',
+      field: 'selected',
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
+      cellRenderer: (params: any) => {
+        return !params.data.moved ? `<input type="checkbox" ${params.data.selected ? 'checked' : ''} />` : '';
+      },
+      width: 50
+    },
+    { headerName: 'Text', field: 'text', flex: 1 },
+    { rowDrag: true, width: 30 } // row drag handle
+  ];
+
+  ngOnInit() {
+    this.leftItems = this.items.map(i => ({ ...i, selected: false, moved: false }));
+    this.leftRowData = [...this.leftItems];
+    this.rightRowData = [];
+  }
+
+  moveRight() {
+    this.leftItems.forEach(item => {
+      if (item.selected) {
+        item.moved = true;
+        item.selected = false;
+        this.rightItems.push({ ...item, selected: false });
+      }
+    });
+    this.updateGrids();
+  }
+
+  moveLeft() {
+    this.rightItems.forEach(item => {
+      if (item.selected) {
+        item.moved = false;
+        item.selected = false;
+        this.leftItems.find(li => li.id === item.id)!.moved = false;
+      }
+    });
+    this.rightItems = this.rightItems.filter(item => !item.selected);
+    this.updateGrids();
+  }
+
+  updateGrids() {
+    // Apply search filter
+    this.leftRowData = this.leftItems
+      .filter(i => i.text.toLowerCase().includes(this.leftSearch.toLowerCase()));
+    this.rightRowData = this.rightItems
+      .filter(i => i.text.toLowerCase().includes(this.rightSearch.toLowerCase()));
+  }
+
+  filterLeft(event: any) {
+    this.leftSearch = event.target.value;
+    this.updateGrids();
+  }
+
+  filterRight(event: any) {
+    this.rightSearch = event.target.value;
+    this.updateGrids();
+  }
+
+  toggleLeftSelectAll(event: any) {
+    this.leftItems.forEach(item => {
+      if (!item.moved) item.selected = event.target.checked;
+    });
+    this.updateGrids();
+  }
+
+  toggleRightSelectAll(event: any) {
+    this.rightItems.forEach(item => {
+      item.selected = event.target.checked;
+    });
+    this.updateGrids();
+  }
+
+  onRowDragEnd(event: any) {
+    // Update rightItems order after drag
+    this.rightItems = this.rightRowData;
+  }
+}
+
+
+html
+
+<div class="dual-transfer-container">
+  <!-- Left Panel -->
+  <div class="panel">
+    <div class="header">
+      <input type="checkbox" (change)="toggleLeftSelectAll($event)"> Select All
+      <input type="text" placeholder="Search..." (input)="filterLeft($event)">
+    </div>
+    <ag-grid-angular
+      class="ag-theme-alpine"
+      [rowData]="leftRowData"
+      [columnDefs]="columnDefs"
+      rowSelection="multiple"
+      [suppressRowClickSelection]="true"
+      [domLayout]="'autoHeight'">
+    </ag-grid-angular>
+  </div>
+
+  <!-- Buttons -->
+  <div class="buttons">
+    <button (click)="moveRight()">➡️</button>
+    <button (click)="moveLeft()">⬅️</button>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="panel">
+    <div class="header">
+      <input type="checkbox" (change)="toggleRightSelectAll($event)"> Select All
+      <input type="text" placeholder="Search..." (input)="filterRight($event)">
+    </div>
+    <ag-grid-angular
+      class="ag-theme-alpine"
+      [rowData]="rightRowData"
+      [columnDefs]="columnDefs"
+      rowSelection="multiple"
+      [suppressRowClickSelection]="true"
+      [rowDragManaged]="true"
+      (rowDragEnd)="onRowDragEnd($event)"
+      [domLayout]="'autoHeight'">
+    </ag-grid-angular>
+  </div>
+</div>
+
+css
+.dual-transfer-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+
+  .panel {
+    width: 300px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-weight: 500;
+      margin-bottom: 10px;
+
+      input[type="text"] {
+        padding: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+    }
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+
+    button {
+      padding: 5px 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+
+      &:hover {
+        background-color: #0056b3;
+      }
+    }
+  }
+}
+
+
+
