@@ -1,0 +1,109 @@
+<div class="container">
+  <!-- Left Panel -->
+  <ag-grid-angular
+    class="ag-theme-alpine left-panel"
+    [rowData]="leftData"
+    [columnDefs]="leftColumnDefs"
+    rowSelection="multiple"
+    suppressRowClickSelection="true"
+    [defaultColDef]="defaultColDef"
+    [domLayout]="'autoHeight'"
+    (selectionChanged)="onLeftSelectionChanged()"
+  ></ag-grid-angular>
+
+  <!-- Buttons -->
+  <div class="actions">
+    <button (click)="moveRight()">➡️</button>
+    <button (click)="moveLeft()">⬅️</button>
+  </div>
+
+  <!-- Right Panel -->
+  <ag-grid-angular
+    class="ag-theme-alpine right-panel"
+    [rowData]="rightData"
+    [columnDefs]="rightColumnDefs"
+    rowSelection="multiple"
+    suppressRowClickSelection="true"
+    [defaultColDef]="defaultColDef"
+    rowDragManaged="true"
+    animateRows="true"
+    [domLayout]="'autoHeight'"
+    (selectionChanged)="onRightSelectionChanged()"
+  ></ag-grid-angular>
+</div>
+
+
+
+
+
+ts
+
+
+import { Component } from '@angular/core';
+import { ColDef } from 'ag-grid-community';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent {
+  leftData = [
+    { id: 1, name: 'Option A', moved: false },
+    { id: 2, name: 'Option B', moved: false },
+    { id: 3, name: 'Option C', moved: false }
+  ];
+
+  rightData: any[] = [];
+
+  defaultColDef: ColDef = {
+    flex: 1,
+    sortable: true,
+    resizable: true,
+  };
+
+  leftColumnDefs: ColDef[] = [
+    {
+      headerCheckboxSelection: true,
+      checkboxSelection: params => !params.data.moved, // hide checkbox if moved
+      width: 50
+    },
+    { field: 'name' }
+  ];
+
+  rightColumnDefs: ColDef[] = [
+    {
+      headerCheckboxSelection: true,
+      checkboxSelection: true,
+      rowDrag: true,
+      width: 50
+    },
+    { field: 'name' }
+  ];
+
+  private leftSelected: any[] = [];
+  private rightSelected: any[] = [];
+
+  onLeftSelectionChanged() {
+    // Capture selected rows from left grid
+  }
+
+  onRightSelectionChanged() {
+    // Capture selected rows from right grid
+  }
+
+  moveRight() {
+    const selected = this.leftSelected;
+    selected.forEach(item => item.moved = true);
+    this.rightData = [...this.rightData, ...selected];
+    this.leftSelected = [];
+  }
+
+  moveLeft() {
+    const selected = this.rightSelected;
+    selected.forEach(item => item.moved = false);
+    this.leftData = [...this.leftData]; // refresh left side
+    this.rightData = this.rightData.filter(d => !selected.includes(d));
+    this.rightSelected = [];
+  }
+}
